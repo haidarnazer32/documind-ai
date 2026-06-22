@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+ provider = "prisma-client"
+ output = "../src/generated"
+}
+
+datasource db {
+ provider = "sqlite"
+}
+
+model User {
+ id String @id @default(cuid())
+ email String @unique
+ name String
+ passwordHash String
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ documents Document[]
+ aiPreferences AIPreference?
+}
+
+// Define the Document model
+model Document {
+ id String @id @default(cuid())
+ title String
+ fileName String
+ fileUrl String
+ fileType String // pdf, docx
+ content String? // Extracted text (optional for large docs)
+ summary String? // AI-generated summary
+ status String @default("uploaded") // uploaded, processing, reviewed, error
+ userId String
+ user User @relation(fields: [userId], references: [id])
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ reviews AIReview[]
+ suggestions AISuggestion[]
+ compliance ComplianceCheck[]
+ chatMessages ChatMessage[] // Added opposite relation for ChatMessage
+}
+
+// AIPreference model stores the user's preferred AI provider and API key (encrypted)
+// We want one AIPreference per user, so we make the relation one-to-one by making userId unique
+model AIPreference {
+ id String @id @default(cuid())
+ userId String @unique
+ user User @relation(fields: [userId], references: [id])
+ provider String // openai, anthropic
+ apiKey String // Encrypted
+ model String
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+}
+
+// AIReview stores the AI's review feedback for a document
+model AIReview {
+ id String @id @default(cuid())
+ documentId String
+ document Document @relation(fields: [documentId], references: [id])
+ reviewType String // grammar, style, structure, content
+ feedback String
+ score Float? // 0-100
+ createdAt DateTime @default(now())
+}
+
+// AISuggestion stores suggested edits from the AI
+model AISuggestion {
+ id String @id @default(cuid())
+ documentId String
+ document Document @relation(fields: [documentId], references: [id])
+ originalText String
+ suggestedText String
+ type String // grammar, clarity, conciseness, tone
+ status String @default("pending") // pending, accepted, rejected
+ createdAt DateTime @default(now())
+}
+
+// ComplianceCheck stores results of checking the document against rules/templates
+model ComplianceCheck {
+ id String @id @default(cuid())
+ documentId String
+ document Document @relation(fields: [documentId], references: [id])
+ ruleName String
+ passed Boolean
+ details Json
+ createdAt DateTime @default(now())
+}
+
+// ChatMessage stores messages in a chat between the user and AI about a document
+model ChatMessage {
+ id String @id @default(cuid())
+ documentId String
+ document Document @relation(fields: [documentId], references: [id])
+ content String
+ isFromAI Boolean
+ createdAt DateTime @default(now())
+}
