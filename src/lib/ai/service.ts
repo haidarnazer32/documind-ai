@@ -21,7 +21,8 @@ export async function processDocumentWithAI(documentId: string, userId: string):
   }
 
   // 2. Get the user's AI preference
-  const aiPreference = await prisma.aiPreference.findUnique({
+  // Prisma 7 camelCases acronyms as `aIPreference` (lowercase first letter, keep inner caps).
+  const aiPreference = await prisma.aIPreference.findUnique({
     where: { userId },
   })
 
@@ -117,7 +118,8 @@ export async function processDocumentWithAI(documentId: string, userId: string):
  * Get the AI provider for a user (used in other services like chat)
  */
 export async function getAIProviderForUser(userId: string): Promise<{ provider: AIProvider; apiKey: string }> {
-  const aiPreference = await prisma.aiPreference.findUnique({
+  // Prisma 7 camelCases acronyms as `aIPreference` (lowercase first letter, keep inner caps).
+  const aiPreference = await prisma.aIPreference.findUnique({
     where: { userId },
   })
 
